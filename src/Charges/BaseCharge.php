@@ -22,6 +22,7 @@ abstract class BaseCharge implements PayChargeContract
             case 'wx_pub':
             case 'wx_pub_qr':
             case 'wx_lite':
+            case 'wx_wap':
                 $client = new Client();
 
                 return 'wx_'.$client->formatedId('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', 24);

@@ -62,6 +62,7 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
                 case 'wx_pub_qr':
                 case 'wx_lite':
                 case 'wx_app':
+                case 'wap':
                     $config = config('ibrand.pay.default.wechat.'.$app);
                     $config['notify_url'] = route('pay.wechat.notify', ['app' => $app]);
                     $credential = $this->createWechatCharge($data, $config, $out_trade_no);
@@ -113,6 +114,10 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
         switch ($data['channel']) {
             case 'wx_pub_qr':
                 $pay = Pay::wechat($config)->scan($chargeData);
+
+                return ['wechat' => $pay];
+            case 'wap':
+                $pay = Pay::wechat($config)->wap($chargeData);
 
                 return ['wechat' => $pay];
             case 'wx_pub':
