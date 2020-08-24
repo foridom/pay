@@ -36,7 +36,7 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
     {
         $this->validateParams($data);
 
-        if (is_null($charge) && !in_array($data['channel'], ['wx_pub', 'wx_pub_qr', 'wx_lite', 'alipay_wap', 'alipay_pc_direct', 'wx_app'])) {
+        if (is_null($charge) && !in_array($data['channel'], ['wx_pub', 'wx_pub_qr', 'wx_lite', 'alipay_wap', 'alipay_pc_direct', 'wx_app', 'wx_wap'])) {
             throw new \InvalidArgumentException("Unsupported channel [{$data['channel']}]");
         }
 
@@ -62,7 +62,7 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
                 case 'wx_pub_qr':
                 case 'wx_lite':
                 case 'wx_app':
-                case 'wap':
+                case 'wx_wap':
                     $config = config('ibrand.pay.default.wechat.'.$app);
                     $config['notify_url'] = route('pay.wechat.notify', ['app' => $app]);
                     $credential = $this->createWechatCharge($data, $config, $out_trade_no);
@@ -116,7 +116,7 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
                 $pay = Pay::wechat($config)->scan($chargeData);
 
                 return ['wechat' => $pay];
-            case 'wap':
+            case 'wx_wap':
                 $pay = Pay::wechat($config)->wap($chargeData);
 
                 return ['wechat' => $pay];
