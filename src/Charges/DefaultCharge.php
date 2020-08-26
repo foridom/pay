@@ -117,7 +117,7 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
 
                 return ['wechat' => $pay];
             case 'wx_wap':
-                $pay = Pay::wechat($config)->wap($chargeData);
+                $pay = Pay::wechat($config)->wap($chargeData)->getTargetUrl();
 
                 return ['wechat' => $pay];
             case 'wx_pub':
