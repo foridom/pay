@@ -117,7 +117,8 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
 
                 return ['wechat' => $pay];
             case 'wx_wap':
-                $pay = Pay::wechat($config)->wap($chargeData);
+                $mweb_url = Pay::wechat($config)->wap($chargeData)->getTargetUrl();
+                $pay = $this->getDeeplink($mweb_url, $chargeData['spbill_create_ip']);
 
                 return ['wechat' => $pay];
             case 'wx_pub':
@@ -243,6 +244,35 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
                 $charge->failure_msg = $result['err_code_des'];
                 $charge->save();
             }
+        }
+    }
+
+    /**
+     * 获取微信支付中间页deepLink参数
+     * @param string $url 微信返回的mweb_url
+     * @param string $ip 用户端IP
+     * @return false|string
+     */
+    private function getDeeplink(string $url, string $ip)
+    {
+        $headers = array("X-FORWARDED-FOR:$ip", "CLIENT-IP:$ip");
+        ob_start();
+        $ch = curl_init();
+        curl_setopt ($ch, CURLOPT_URL, $url);
+        curl_setopt ($ch, CURLOPT_HTTPHEADER , $headers );
+        curl_setopt ($ch, CURLOPT_REFERER, "m.foridom.com.cn");
+        curl_setopt( $ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Linux; Android 6.0.1; OPPO R11s Build/MMB29M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/55.0.2883.91 Mobile Safari/537.36');
+        curl_exec($ch);
+        curl_close ($ch);
+        $out = ob_get_contents();
+
+        ob_clean();
+        $a = preg_match('/weixin:\/\/wap.*/',$out, $str);
+        if ($a) {
+            return substr($str[0], 0, strlen($str[0])-1);
+        } else {
+            return '';
         }
     }
 }
