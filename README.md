@@ -17,7 +17,7 @@ $ composer require ibrand/pay
 $ php artisan vendor:publish
 $ php artisan migrate
 ```
-## 使用
+## 使用 
 
 ### 创建支付请求
 
