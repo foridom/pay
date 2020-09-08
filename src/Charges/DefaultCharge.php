@@ -118,7 +118,8 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
                 return ['wechat' => $pay];
             case 'wx_wap':
                 $mweb_url = Pay::wechat($config)->wap($chargeData)->getTargetUrl();
-                $pay = $this->getDeeplink($mweb_url, $chargeData['spbill_create_ip']);
+                $pay = sprintf("%s&redirect_url=%s", $mweb_url,  urlencode($data['extra']['successUrl']));
+//                $pay = $this->getDeeplink($mweb_url, $chargeData['spbill_create_ip']);
 
                 return ['wechat' => $pay];
             case 'wx_pub':
