@@ -36,7 +36,7 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
     {
         $this->validateParams($data);
 
-        if (is_null($charge) && !in_array($data['channel'], ['wx_pub', 'wx_pub_qr', 'wx_lite', 'alipay_wap', 'alipay_pc_direct', 'wx_app', 'wx_wap', 'offline_pay'])) {
+        if (is_null($charge) && !in_array($data['channel'], ['wx_pub', 'wx_pub_qr', 'wx_lite', 'alipay_wap', 'alipay_pc_direct', 'wx_app', 'wx_wap', 'offline_pay', 'baidu_cashier'])) {
             throw new \InvalidArgumentException("Unsupported channel [{$data['channel']}]");
         }
 
@@ -72,6 +72,10 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
                     $config = config('ibrand.pay.default.alipay.'.$app);
                     $config['notify_url'] = route('pay.alipay.notify', ['app' => $app]);
                     $credential = $this->createAlipayCharge($data, $config, $out_trade_no);
+                    break;
+                case 'baidu_cashier':
+                    $config = config('ibrand.pay.default.baidu.'.$app);
+                    $credential = $this->createBaiduCharge($data, $config);
             }
 
             $payModel->credential = $credential;
@@ -248,6 +252,39 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
         }
     }
 
+    public function createBaiduCharge($data, $config)
+    {
+        $chargeData = [
+            'appKey' => $config['app_key'],
+            'dealId' => $config['deal_id'],
+            'body' => mb_strcut($data['body'], 0, 32, 'UTF-8'),
+            'tpOrderId' => $data['order_no'],
+            'totalAmount' => number_format($data['amount'] / 100, 2, '.', ''),
+            'dealTitle' => mb_strcut($data['subject'], 0, 32, 'UTF-8'),
+            'client_ip' => $data['client_ip'],
+            'signFieldsRange' => 1,
+        ];
+        $chargeData['rsaSign'] = $this->genSignWithRsa($chargeData,$config['private_key']);
+
+//        $bizInfoArr = [
+//            "tpData" => [
+//                "appKey" => $chargeData['appKey'],
+//                "dealId" => $chargeData['dealId'],
+//                "tpOrderId" => $chargeData['tpOrderId'],
+//                "rsaSign" =>  $chargeData['rsaSign'],
+//                "totalAmount" => $chargeData['totalAmount'],
+//                "returnData"=> [
+//                    "bizKey1"=> "第三方的字段1取值",
+//                    "bizKey2"=> "第三方的字段2取值"
+//                ]
+//            ],
+//        ];
+//        $chargeData['bizInfo'] = json_encode($bizInfoArr); // 订单详细信息，需要是一个可解析为JSON Object的字符串 可以为空 {}
+        $chargeData['bizInfo'] = '{}'; // 订单详细信息，需要是一个可解析为JSON Object的字符串 可以为空 {}
+
+        return ['baidu' => $chargeData];
+    }
+
     /**
      * 获取微信支付中间页deepLink参数
      * @param string $url 微信返回的mweb_url
@@ -276,4 +313,8 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
             return '';
         }
     }
+
+
+
+
 }
