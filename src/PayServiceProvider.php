@@ -80,6 +80,7 @@ class PayServiceProvider extends ServiceProvider
         Route::group(array_merge(['namespace' => $this->namespace], $routeAttr), function ($router) {
             $router->post('wechat/{app}', 'WechatPayNotifyController@notify')->name('pay.wechat.notify');
             $router->post('alipay/{app}', 'AlipayNotifyController@notify')->name('pay.alipay.notify');
+            $router->post('baidu/{app}', 'BaiduNotifyController@notify')->name('pay.baidu.notify');
         });
 
         Route::group(array_merge(['namespace' => $this->namespace], ['middleware' => ['web']]), function ($router) {
