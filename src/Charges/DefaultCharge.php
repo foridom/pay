@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use iBrand\Component\Pay\Contracts\PayChargeContract;
 use iBrand\Component\Pay\Exceptions\GatewayException;
 use iBrand\Component\Pay\Models\Charge;
+use iBrand\Component\Pay\Models\RSASign;
 use Yansongda\Pay\Exceptions\GatewayException as PayException;
 use Yansongda\Pay\Pay;
 
@@ -259,12 +260,13 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
             'dealId' => $config['deal_id'],
             'body' => mb_strcut($data['body'], 0, 32, 'UTF-8'),
             'tpOrderId' => $data['order_no'],
-            'totalAmount' => number_format($data['amount'] / 100, 2, '.', ''),
+            'totalAmount' => abs($data['amount']),
             'dealTitle' => mb_strcut($data['subject'], 0, 32, 'UTF-8'),
             'client_ip' => $data['client_ip'],
             'signFieldsRange' => 1,
         ];
-        $chargeData['rsaSign'] = $this->genSignWithRsa($chargeData,$config['private_key']);
+
+        $chargeData['rsaSign'] = RSASign::sign($chargeData,$config['private_key']);
 
 //        $bizInfoArr = [
 //            "tpData" => [
