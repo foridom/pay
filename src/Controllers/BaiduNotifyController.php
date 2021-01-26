@@ -30,19 +30,19 @@ class BaiduNotifyController extends Controller
         if ($result) {
             // 这里回调处理订单操作
             // 如果订单已支付，进行业务处理并返回核销信息
-            $charge = \iBrand\Component\Pay\Models\Charge::where('channel', 'baidu_cashier')->where('order_no', $result['tpOrderId'])->first();
+            $charge = \iBrand\Component\Pay\Models\Charge::where('channel', 'baidu_cashier')->where('order_no', $result['tpOrderId'])->orderByDesc('created_at')->first();
 
             if (!$charge) {
                 return response('支付失败', 500);
             }
 
             $charge->transaction_meta = json_encode($result);
-            $charge->transaction_no = $result['dealId'];
+            $charge->transaction_no = $result['orderId'];
             $charge->time_paid = Carbon::createFromTimestamp($result['payTime']);
             $charge->paid = 1;
             $charge->save();
 
-            if ($charge->amount !== (int)($result['totalMoney'] * 100)) {
+            if ($charge->amount !== (int)($result['totalMoney'])) {
                 return response('支付失败', 500);
             }
 

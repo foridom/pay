@@ -133,7 +133,7 @@ class BaiduPay
      */
     public static function notify()
     {
-        $data = $_POST; // 获取xml
+        $data = request()->all(); // 获取xml
         $config = self::$config;
         if (!$data || empty($data['rsaSign']))
             die('暂无回调信息');
