@@ -13,6 +13,7 @@ namespace iBrand\Component\Pay\Controllers;
 
 use Carbon\Carbon;
 use iBrand\Component\Pay\Facades\PayNotify;
+use iBrand\Component\Pay\Models\BaiduPay;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Yansongda\Pay\Pay;
@@ -23,61 +24,36 @@ class BaiduNotifyController extends Controller
     {
         $config = config('ibrand.pay.default.baidu.'.$app);
 
-        $data =  $_POST;
+        $baidupay = new BaiduPay($config);
 
-        $userId     = $data['userId']; //百度用户ID
-        $orderId    = $data['orderId']; //百度平台订单ID【幂等性标识参数】(用于重入判断)
-        $unitPrice  = $data['unitPrice']; //单位：分
-        $count      = $data['count']; //数量
-        $totalMoney = $data['totalMoney']; //订单的实际金额，单位：分
-        $payMoney   = $data['payMoney']; //扣除各种优惠后用户还需要支付的金额，单位：分
-        $dealId     = $data['dealId']; //百度收银台的财务结算凭证
-        $payTime    = $data['payTime']; //支付完成时间，时间戳
-        $payType    = $data['payType']; //支付渠道值
-        $partnerId  = $data['partnerId']; //支付平台标识值
-        $status     = $data['status']; //1：未支付；2：已支付；-1：订单取消
-        $tpOrderId  = $data['tpOrderId']; //业务方唯一订单号
-        $returnData = $data['returnData']; //业务方下单时传入的数据
-        $rsaSign    = $data['rsaSign']; //全部参数参与签名
-
-        unset($data['rsaSign']); // rsaSign 不需要参与签名
-        $data['sign'] = $rsaSign;
-        $check_sign = $this->checkSignWithRsa($data, $config['public_key']);
-        if ($check_sign){// 验签失败
-            Log::info("百度支付验签: " . $check_sign);
-            return 'failed';
-        };
-
-        if($status == 2) {
+        $result = $baidupay->notify();
+        if ($result) {
+            // 这里回调处理订单操作
             // 如果订单已支付，进行业务处理并返回核销信息
-            $charge = \iBrand\Component\Pay\Models\Charge::where('channel', 'baidu_cashier')->where('order_no', $tpOrderId)->first();
+            $charge = \iBrand\Component\Pay\Models\Charge::where('channel', 'baidu_cashier')->where('order_no', $result['tpOrderId'])->first();
 
             if (!$charge) {
                 return response('支付失败', 500);
             }
 
-            $charge->transaction_meta = json_encode($check_sign);
-            $charge->transaction_no = $dealId;
-            $charge->time_paid = Carbon::createFromTimestamp($payTime);
+            $charge->transaction_meta = json_encode($result);
+            $charge->transaction_no = $result['dealId'];
+            $charge->time_paid = Carbon::createFromTimestamp($result['payTime']);
             $charge->paid = 1;
             $charge->save();
 
-            if ($charge->amount !== intval($totalMoney * 100)) {
+            if ($charge->amount !== (int)($result['totalMoney'] * 100)) {
                 return response('支付失败', 500);
             }
 
             PayNotify::success($charge->type, $charge);
 
-            // 需要返回的响应
-
-
-            $ret['errno'] = 0;
-            $ret['msg']   = 'success';
-            $ret['data']  = json_encode(['isConsumed'=>2]);
-            echo json_encode($ret);
+            // 以验证返回支付成功后的信息，可直接对订单进行操作，已通知百度支付成功
+            $baidupay->success(); // 支付返还成功，通知结果
+        } else {
+            // 支付失败
+            $baidupay->error(); // 支付失败，返回状态（无论支付成功与否都需要通知百度）
         }
-
-        return response('baidu notify fail.', 500);
     }
 
     /**
