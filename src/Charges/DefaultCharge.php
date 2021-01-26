@@ -14,6 +14,7 @@ namespace iBrand\Component\Pay\Charges;
 use Carbon\Carbon;
 use iBrand\Component\Pay\Contracts\PayChargeContract;
 use iBrand\Component\Pay\Exceptions\GatewayException;
+use iBrand\Component\Pay\Models\BaiduPay;
 use iBrand\Component\Pay\Models\Charge;
 use iBrand\Component\Pay\Models\RSASign;
 use Yansongda\Pay\Exceptions\GatewayException as PayException;
@@ -255,36 +256,17 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
 
     public function createBaiduCharge($data, $config)
     {
-        $chargeData = [
-            'appKey' => $config['app_key'],
-            'dealId' => $config['deal_id'],
-            'body' => mb_strcut($data['body'], 0, 32, 'UTF-8'),
-            'tpOrderId' => $data['order_no'],
-            'totalAmount' => abs($data['amount']),
-            'dealTitle' => mb_strcut($data['subject'], 0, 32, 'UTF-8'),
-            'client_ip' => $data['client_ip'],
-            'signFieldsRange' => 1,
-        ];
+        $baidupay = new BaiduPay($config);
 
-        $chargeData['rsaSign'] = RSASign::sign($chargeData,$config['private_key']);
+        $order = array(
+            'body'          => mb_strcut($data['body'], 0, 32, 'UTF-8'), // 产品描述
+            'total_amount'  => abs($data['amount']), // 订单金额（分）
+            'order_sn'      => $data['order_no'], // 订单编号
+        );
 
-//        $bizInfoArr = [
-//            "tpData" => [
-//                "appKey" => $chargeData['appKey'],
-//                "dealId" => $chargeData['dealId'],
-//                "tpOrderId" => $chargeData['tpOrderId'],
-//                "rsaSign" =>  $chargeData['rsaSign'],
-//                "totalAmount" => $chargeData['totalAmount'],
-//                "returnData"=> [
-//                    "bizKey1"=> "第三方的字段1取值",
-//                    "bizKey2"=> "第三方的字段2取值"
-//                ]
-//            ],
-//        ];
-//        $chargeData['bizInfo'] = json_encode($bizInfoArr); // 订单详细信息，需要是一个可解析为JSON Object的字符串 可以为空 {}
-        $chargeData['bizInfo'] = '{}'; // 订单详细信息，需要是一个可解析为JSON Object的字符串 可以为空 {}
+        $chargeData = $baidupay->xcxPay($order);
 
-        return ['baidu' => $chargeData];
+        return ['baidu' => $chargeData];           // JSON化直接返回小程序客户端
     }
 
     /**
