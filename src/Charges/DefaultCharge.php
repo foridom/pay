@@ -77,7 +77,7 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
                     break;
                 case 'baidu_cashier':
                     $config = config('ibrand.pay.default.baidu.'.$app);
-                    $credential = $this->createBaiduCharge($data, $config);
+                    $credential = $this->createBaiduCharge($data, $config, $out_trade_no);
             }
 
             $payModel->credential = $credential;
@@ -254,14 +254,16 @@ class DefaultCharge extends BaseCharge implements PayChargeContract
         }
     }
 
-    public function createBaiduCharge($data, $config)
+    public function createBaiduCharge($data, $config, &$out_trade_no)
     {
+        $out_trade_no = $this->getOutTradeNo($data['order_no'], $data['channel']);
+
         $baidupay = new BaiduPay($config);
 
         $order = array(
             'body'          => mb_strcut($data['body'], 0, 32, 'UTF-8'), // 产品描述
             'total_amount'  => abs($data['amount']), // 订单金额（分）
-            'order_sn'      => $data['order_no'], // 订单编号
+            'order_sn'      => $out_trade_no, // 订单编号
         );
 
         $chargeData = $baidupay->xcxPay($order);

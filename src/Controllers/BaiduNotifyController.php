@@ -30,7 +30,7 @@ class BaiduNotifyController extends Controller
         if ($result) {
             // 这里回调处理订单操作
             // 如果订单已支付，进行业务处理并返回核销信息
-            $charge = \iBrand\Component\Pay\Models\Charge::where('channel', 'baidu_cashier')->where('order_no', $result['tpOrderId'])->orderByDesc('created_at')->first();
+            $charge = \iBrand\Component\Pay\Models\Charge::ofOutTradeNo($result['tpOrderId'])->first();
 
             if (!$charge) {
                 return response('支付失败', 500);

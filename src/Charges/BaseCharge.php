@@ -26,6 +26,10 @@ abstract class BaseCharge implements PayChargeContract
                 $client = new Client();
 
                 return 'wx_'.$client->formatedId('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', 24);
+            case 'baidu_cashier':
+                $client = new Client();
+
+                return 'baidu_'.$client->formatedId('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', 24);
             default:
                 $client = new Client();
 

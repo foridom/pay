@@ -51,20 +51,7 @@ class BaiduPay
                 "rsaSign"       => $rsaSign,
                 "totalAmount"   => $order['total_amount'],
                 "returnData"    => '',
-                "displayData"   => array(
-                    "cashierTopBlock" => array(
-                        array(
-                            [ "leftCol" => "订单名称", "rightCol"   => $order['body'] ],
-                            [ "leftCol" => "数量", "rightCol" => "1" ],
-                            [ "leftCol" => "订单金额", "rightCol"   => $order['total_amount'] ]
-                        ),
-                        array(
-                            [ "leftCol" => "服务地址", "rightCol" => "北京市海淀区上地十街10号百度大厦" ],
-                            [ "leftCol" => "服务时间", "rightCol" => "2018/10/29 14:51" ],
-                            [ "leftCol" => "服务人员", "rightCol" => "百度App" ]
-                        )
-                    )
-                ),
+                "displayData"   => '',
                 "dealTitle"     => $order['body'],
                 "dealSubTitle"  => $order['body'],
                 "dealThumbView" => "https://b.bdstatic.com/searchbox/icms/searchbox/img/swan-logo.png",
